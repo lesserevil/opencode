@@ -661,12 +661,19 @@ export namespace SessionPrompt {
         messages: [
           ...MessageV2.toModelMessages(sessionMessages, model),
           ...(isLastStep
-            ? [
-                {
-                  role: "assistant" as const,
-                  content: MAX_STEPS,
-                },
-              ]
+            ? supportsAssistantPrefill(model)
+              ? [
+                  {
+                    role: "assistant" as const,
+                    content: MAX_STEPS,
+                  },
+                ]
+              : [
+                  {
+                    role: "user" as const,
+                    content: `<system-reminder>\n${MAX_STEPS}\n</system-reminder>`,
+                  },
+                ]
             : []),
         ],
         tools,
@@ -1915,5 +1922,15 @@ NOTE: At any point in time through this workflow you should feel free to ask the
         },
         { touch: false },
       )
+  }
+
+  // AWS Bedrock does not support assistant message prefill (conversations must
+  // end with a user message). Detect Bedrock models so callers can fall back to
+  // injecting the content as a user message instead.
+  function supportsAssistantPrefill(model: Provider.Model): boolean {
+    if (model.api.npm === "@ai-sdk/amazon-bedrock") return false
+    const id = model.id.toLowerCase()
+    if (id.includes("bedrock")) return false
+    return true
   }
 }
