@@ -44,7 +44,6 @@ import { SessionStatus } from "./status"
 import { LLM } from "./llm"
 import { iife } from "@/util/iife"
 import { Shell } from "@/shell/shell"
-import { Truncate } from "@/tool/truncation"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
